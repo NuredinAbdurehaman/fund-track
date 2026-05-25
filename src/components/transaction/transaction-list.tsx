@@ -19,13 +19,23 @@ import {
 } from "@/components/ui/table";
 import { useLedger } from "@/hooks/use-ledger";
 import { formatAmount, sortTransactions } from "@/lib/ledger";
-export function TransactionList() {
-  const { transactions, hydrated } = useLedger();
+import type { TransactionFilters } from "@/types/transaction";
+import { TransactionRowActions } from "@/components/transaction/transaction-row-actions";
 
-  const displayed = useMemo(
-    () => sortTransactions(transactions),
-    [transactions]
-  );
+interface TransactionListProps {
+  filters?: TransactionFilters;
+}
+
+export function TransactionList({ filters = {} }: TransactionListProps) {
+  const { transactions, hydrated, getFilteredTransactions } = useLedger();
+
+  const displayed = useMemo(() => {
+    const hasFilters = Object.values(filters).some(Boolean);
+    if (hasFilters) {
+      return getFilteredTransactions(filters);
+    }
+    return sortTransactions(transactions);
+  }, [filters, transactions, getFilteredTransactions]);
 
   return (
     <Card>
@@ -51,6 +61,7 @@ export function TransactionList() {
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>Note</TableHead>
+                <TableHead className="w-[80px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -71,6 +82,9 @@ export function TransactionList() {
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate text-muted-foreground">
                     {tx.note ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <TransactionRowActions transaction={tx} />
                   </TableCell>
                 </TableRow>
               ))}
