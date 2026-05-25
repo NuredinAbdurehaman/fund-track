@@ -11,6 +11,13 @@ import {
   normalizeCategory,
   sortTransactions,
 } from "@/lib/ledger";
+import {
+  createTransactionApi,
+  deleteTransactionApi,
+  fetchTransactions,
+  isApiEnabled,
+  updateTransactionApi,
+} from "@/lib/api-transactions";
 import { loadTransactions, saveTransactions } from "@/lib/storage";
 import type { Transaction, TransactionInput } from "@/types/transaction";
 import type { TransactionFilters } from "@/types/transaction";
@@ -18,25 +25,61 @@ import type { TransactionFilters } from "@/types/transaction";
 export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [usingApi, setUsingApi] = useState(false);
 
   useEffect(() => {
-    setTransactions(loadTransactions());
-    setHydrated(true);
+    async function init() {
+      if (isApiEnabled()) {
+        const fromApi = await fetchTransactions();
+        if (fromApi) {
+          setTransactions(fromApi);
+          setUsingApi(true);
+          setHydrated(true);
+          return;
+        }
+      }
+
+      setTransactions(loadTransactions());
+      setHydrated(true);
+    }
+
+    void init();
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
+    if (hydrated && !usingApi) {
       saveTransactions(transactions);
     }
-  }, [transactions, hydrated]);
+  }, [transactions, hydrated, usingApi]);
 
-  const addTransaction = useCallback((input: TransactionInput) => {
-    const tx = createTransaction(input);
-    setTransactions((prev) => [...prev, tx]);
-  }, []);
+  const addTransaction = useCallback(
+    async (input: TransactionInput) => {
+      if (usingApi) {
+        const created = await createTransactionApi(input);
+        if (created) {
+          setTransactions((prev) => [...prev, created]);
+          return;
+        }
+      }
+
+      const tx = createTransaction(input);
+      setTransactions((prev) => [...prev, tx]);
+    },
+    [usingApi]
+  );
 
   const updateTransaction = useCallback(
-    (id: string, input: TransactionInput) => {
+    async (id: string, input: TransactionInput) => {
+      if (usingApi) {
+        const updated = await updateTransactionApi(id, input);
+        if (updated) {
+          setTransactions((prev) =>
+            prev.map((t) => (t.id === id ? updated : t))
+          );
+          return;
+        }
+      }
+
       setTransactions((prev) =>
         prev.map((t) =>
           t.id === id
@@ -52,12 +95,23 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
         )
       );
     },
-    []
+    [usingApi]
   );
 
-  const deleteTransaction = useCallback((id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  const deleteTransaction = useCallback(
+    async (id: string) => {
+      if (usingApi) {
+        const ok = await deleteTransactionApi(id);
+        if (ok) {
+          setTransactions((prev) => prev.filter((t) => t.id !== id));
+          return;
+        }
+      }
+
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    },
+    [usingApi]
+  );
 
   const categories = useMemo(
     () => getCategories(transactions),
