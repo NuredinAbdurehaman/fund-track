@@ -9,10 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useLedger } from "@/hooks/use-ledger";
-import { computeBalance, formatAmount } from "@/lib/ledger";
+import { formatAmount } from "@/lib/ledger";
 
 export function SummaryCards() {
-  const { transactions, selfBalance, balancesByCategory, hydrated } =
+  const { transactions, selfBalance, myAccountTotal, balancesByCategory, hydrated } =
     useLedger();
 
   const stats = useMemo(() => {
@@ -23,7 +23,7 @@ export function SummaryCards() {
       (sum, [, balance]) => sum + balance,
       0
     );
-    const totalNet = computeBalance(transactions);
+    const totalNet = myAccountTotal;
     const addCount = transactions.filter((t) => t.type === "add").length;
     const withdrawCount = transactions.filter((t) => t.type === "withdraw").length;
 
@@ -34,7 +34,7 @@ export function SummaryCards() {
       withdrawCount,
       categoryCount: Object.keys(balancesByCategory).length,
     };
-  }, [transactions, balancesByCategory]);
+  }, [transactions, balancesByCategory, myAccountTotal]);
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
@@ -47,9 +47,9 @@ export function SummaryCards() {
       description: "Your own funds",
     },
     {
-      title: "Total net",
+      title: "My Account",
       value: formatAmount(stats.totalNet),
-      description: "Across all categories",
+      description: "Total across all categories",
     },
     {
       title: "People net",

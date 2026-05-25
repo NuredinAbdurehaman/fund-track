@@ -25,7 +25,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { balancesByCategory, hydrated } = useLedger();
+  const { balancesByCategory, myAccountTotal, hydrated } = useLedger();
 
   const categoryEntries = Object.entries(balancesByCategory).sort(([a], [b]) =>
     a.localeCompare(b)
@@ -61,13 +61,33 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {hydrated && categoryEntries.length > 0 && (
+        {hydrated && (
           <>
             <SidebarSeparator />
             <SidebarGroup>
               <SidebarGroupLabel>Balances</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <div className="flex w-full items-center justify-between px-2 py-1.5 text-sm font-semibold">
+                      <span className="truncate">
+                        My Account
+                        <span className="ml-1 font-normal text-muted-foreground">
+                          (total)
+                        </span>
+                      </span>
+                      <span
+                        className={`tabular-nums text-xs font-semibold ${
+                          myAccountTotal >= 0
+                            ? "text-foreground"
+                            : "text-destructive"
+                        }`}
+                      >
+                        {formatAmount(myAccountTotal)}
+                      </span>
+                    </div>
+                  </SidebarMenuItem>
+                  {categoryEntries.length > 0 && <SidebarSeparator />}
                   {categoryEntries.map(([category, balance]) => (
                     <SidebarMenuItem key={category}>
                       <div className="flex w-full items-center justify-between px-2 py-1.5 text-sm">

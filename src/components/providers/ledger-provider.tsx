@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LedgerContext } from "@/hooks/use-ledger";
 import {
   computeBalance,
+  computeMyAccountTotal,
   createTransaction,
   filterTransactions,
   getBalancesByCategory,
@@ -128,6 +129,11 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     [transactions]
   );
 
+  const myAccountTotal = useMemo(
+    () => computeMyAccountTotal(transactions),
+    [transactions]
+  );
+
   const getFilteredTransactions = useCallback(
     (filters: TransactionFilters) =>
       sortTransactions(filterTransactions(transactions, filters)),
@@ -139,6 +145,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       transactions,
       categories,
       balancesByCategory,
+      myAccountTotal,
       selfBalance,
       hydrated,
       addTransaction,
@@ -150,6 +157,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       transactions,
       categories,
       balancesByCategory,
+      myAccountTotal,
       selfBalance,
       hydrated,
       addTransaction,

@@ -6,6 +6,16 @@ import type {
 
 export const CATEGORY_SUGGESTIONS = ["Self", "bro", "mom"] as const;
 
+export const MY_ACCOUNT_LABEL = "My Account";
+
+export function isReservedCategory(category: string): boolean {
+  return category.trim().toLowerCase() === MY_ACCOUNT_LABEL.toLowerCase();
+}
+
+export function computeMyAccountTotal(transactions: Transaction[]): number {
+  return computeBalance(transactions);
+}
+
 export function normalizeCategory(category: string): string {
   const trimmed = category.trim();
   if (!trimmed) return "Uncategorized";
@@ -27,14 +37,20 @@ export function computeBalance(
 export function getCategories(transactions: Transaction[]): string[] {
   const fromTx = transactions.map((t) => t.category);
   const merged = [...CATEGORY_SUGGESTIONS, ...fromTx];
-  return [...new Set(merged)].sort((a, b) => a.localeCompare(b));
+  return [...new Set(merged)]
+    .filter((cat) => cat !== MY_ACCOUNT_LABEL)
+    .sort((a, b) => a.localeCompare(b));
 }
 
 export function getBalancesByCategory(
   transactions: Transaction[]
 ): Record<string, number> {
   const categories = [
-    ...new Set(transactions.map((t) => t.category)),
+    ...new Set(
+      transactions
+        .map((t) => t.category)
+        .filter((cat) => cat !== MY_ACCOUNT_LABEL)
+    ),
   ].sort((a, b) => a.localeCompare(b));
 
   return Object.fromEntries(

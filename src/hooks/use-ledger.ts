@@ -8,6 +8,7 @@ export interface LedgerContextValue {
   transactions: Transaction[];
   categories: string[];
   balancesByCategory: Record<string, number>;
+  myAccountTotal: number;
   selfBalance: number;
   hydrated: boolean;
   addTransaction: (input: TransactionInput) => void | Promise<void>;
