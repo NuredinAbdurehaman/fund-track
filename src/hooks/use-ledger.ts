@@ -8,12 +8,15 @@ export interface LedgerContextValue {
   transactions: Transaction[];
   categories: string[];
   balancesByCategory: Record<string, number>;
+  myAccountTotal: number;
   selfBalance: number;
   hydrated: boolean;
+  loadError?: boolean;
   addTransaction: (input: TransactionInput) => void | Promise<void>;
   updateTransaction: (id: string, input: TransactionInput) => void | Promise<void>;
   deleteTransaction: (id: string) => void | Promise<void>;
   getFilteredTransactions: (filters: TransactionFilters) => Transaction[];
+  refreshTransactions: () => Promise<void>;
 }
 
 export const LedgerContext = createContext<LedgerContextValue | null>(null);

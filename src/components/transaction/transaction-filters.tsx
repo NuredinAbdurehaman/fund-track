@@ -39,11 +39,13 @@ export function TransactionFiltersBar({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <CardTitle className="text-base">Filters</CardTitle>
-        <CardDescription>Narrow the transaction log</CardDescription>
+        <CardDescription className="hidden sm:block">
+          Narrow the transaction log
+        </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <CardContent className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <div className="space-y-2">
           <Label htmlFor="filter-category">Category</Label>
           <Select

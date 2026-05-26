@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { toPrismaData, toTransaction } from "@/lib/transaction-mapper";
 import type { TransactionInput } from "@/types/transaction";
@@ -20,12 +21,22 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireUser();
+  if (response) return response;
+
   const { id } = await params;
 
   try {
     const body: unknown = await request.json();
     if (!isTransactionInput(body)) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const existing = await prisma.transaction.findFirst({
+      where: { id, userId: user!.id },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const row = await prisma.transaction.update({
@@ -46,9 +57,19 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireUser();
+  if (response) return response;
+
   const { id } = await params;
 
   try {
+    const existing = await prisma.transaction.findFirst({
+      where: { id, userId: user!.id },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     await prisma.transaction.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/card";
 import { CategoryCombobox } from "@/components/category/category-combobox";
 import { useLedger } from "@/hooks/use-ledger";
-import { todayIsoDate } from "@/lib/ledger";
+import { isReservedCategory, todayIsoDate } from "@/lib/ledger";
 import type { Transaction, TransactionInput, TransactionType } from "@/types/transaction";
 
 interface TransactionFormProps {
@@ -66,6 +66,10 @@ export function TransactionForm({
     const parsedAmount = parseFloat(amount);
     if (!category.trim()) {
       toast.error("Category is required");
+      return;
+    }
+    if (isReservedCategory(category)) {
+      toast.error("My Account is reserved for the total balance");
       return;
     }
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
