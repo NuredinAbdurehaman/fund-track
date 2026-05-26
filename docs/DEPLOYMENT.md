@@ -117,7 +117,21 @@ See [`docs/GIT_WORKFLOW.md`](./GIT_WORKFLOW.md) for branch strategy.
 
 ---
 
-## 6. Troubleshooting
+## 6. Migrating from localStorage
+
+If you used Fund Track before connecting Supabase, your old transactions may still be in this browser under `fund-track:transactions`.
+
+1. Use the **same browser** where you recorded transactions locally.
+2. Set `NEXT_PUBLIC_USE_API=true` in `.env.local` and sign in at `/login`.
+3. Open the ledger — if the database is empty but local data exists, an **Import local data** banner appears.
+4. Click **Import** — rows are copied to Supabase under your user (`user_id`), preserving IDs, dates, and amounts.
+5. localStorage is cleared after a successful import.
+
+To inspect local data before importing: DevTools → **Application** → **Local Storage** → `fund-track:transactions`.
+
+---
+
+## 7. Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
@@ -130,7 +144,7 @@ See [`docs/GIT_WORKFLOW.md`](./GIT_WORKFLOW.md) for branch strategy.
 
 ---
 
-## 7. Local dev without Supabase
+## 8. Local dev without Supabase
 
 Leave `NEXT_PUBLIC_SUPABASE_URL` unset and `NEXT_PUBLIC_USE_API=false`:
 

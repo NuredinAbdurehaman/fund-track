@@ -39,3 +39,17 @@ export function saveTransactions(transactions: Transaction[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
 }
+
+export function clearTransactions(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+export function hasLocalTransactions(): boolean {
+  return loadTransactions().length > 0;
+}
+
+export function parseTransactionList(items: unknown): Transaction[] {
+  if (!Array.isArray(items)) return [];
+  return items.filter(isTransaction);
+}

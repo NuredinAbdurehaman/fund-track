@@ -95,6 +95,25 @@ export async function updateTransactionApi(
   return result.data;
 }
 
+export type ImportResult = { imported: number; skipped: number };
+
+export async function importLocalTransactionsApi(
+  transactions: Transaction[]
+): Promise<ImportResult | "unauthorized" | null> {
+  if (!isApiEnabled()) return null;
+
+  const result = await apiFetch<ImportResult>(`${BASE}/import`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ transactions }),
+  });
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return null;
+  }
+  return result.data;
+}
+
 export async function deleteTransactionApi(
   id: string
 ): Promise<boolean | "unauthorized"> {

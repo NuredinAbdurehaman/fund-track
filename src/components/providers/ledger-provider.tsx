@@ -31,33 +31,39 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [usingApi, setUsingApi] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    async function init() {
-      if (isApiEnabled()) {
-        const fromApi = await fetchTransactions();
-        if (fromApi === "unauthorized") {
-          redirectToLogin();
-          return;
-        }
-        if (fromApi) {
-          setTransactions(fromApi);
-          setUsingApi(true);
-          setHydrated(true);
-          setLoadError(false);
-          return;
-        }
-        setLoadError(true);
-        setHydrated(true);
-        toast.error("Could not load transactions. Please try again.");
+  const loadFromSource = useCallback(async () => {
+    if (isApiEnabled()) {
+      const fromApi = await fetchTransactions();
+      if (fromApi === "unauthorized") {
+        redirectToLogin();
         return;
       }
+      if (fromApi) {
+        setTransactions(fromApi);
+        setUsingApi(true);
+        setLoadError(false);
+        return;
+      }
+      setLoadError(true);
+      toast.error("Could not load transactions. Please try again.");
+      return;
+    }
 
-      setTransactions(loadTransactions());
+    setTransactions(loadTransactions());
+  }, []);
+
+  useEffect(() => {
+    async function init() {
+      await loadFromSource();
       setHydrated(true);
     }
 
     void init();
-  }, []);
+  }, [loadFromSource]);
+
+  const refreshTransactions = useCallback(async () => {
+    await loadFromSource();
+  }, [loadFromSource]);
 
   useEffect(() => {
     if (hydrated && !usingApi) {
@@ -183,6 +189,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       updateTransaction,
       deleteTransaction,
       getFilteredTransactions,
+      refreshTransactions,
     }),
     [
       transactions,
@@ -196,6 +203,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       updateTransaction,
       deleteTransaction,
       getFilteredTransactions,
+      refreshTransactions,
     ]
   );
 

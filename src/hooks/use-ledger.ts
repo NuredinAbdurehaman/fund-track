@@ -16,6 +16,7 @@ export interface LedgerContextValue {
   updateTransaction: (id: string, input: TransactionInput) => void | Promise<void>;
   deleteTransaction: (id: string) => void | Promise<void>;
   getFilteredTransactions: (filters: TransactionFilters) => Transaction[];
+  refreshTransactions: () => Promise<void>;
 }
 
 export const LedgerContext = createContext<LedgerContextValue | null>(null);
