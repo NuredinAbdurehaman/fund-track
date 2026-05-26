@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { toPrismaData, toTransaction } from "@/lib/transaction-mapper";
 import type { TransactionInput } from "@/types/transaction";
@@ -17,8 +18,12 @@ function isTransactionInput(body: unknown): body is TransactionInput {
 }
 
 export async function GET() {
+  const { user, response } = await requireUser();
+  if (response) return response;
+
   try {
     const rows = await prisma.transaction.findMany({
+      where: { userId: user!.id },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     });
     return NextResponse.json(rows.map(toTransaction));
@@ -32,6 +37,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const { user, response } = await requireUser();
+  if (response) return response;
+
   try {
     const body: unknown = await request.json();
     if (!isTransactionInput(body)) {
@@ -39,7 +47,10 @@ export async function POST(request: Request) {
     }
 
     const row = await prisma.transaction.create({
-      data: toPrismaData(body),
+      data: {
+        ...toPrismaData(body),
+        userId: user!.id,
+      },
     });
     return NextResponse.json(toTransaction(row), { status: 201 });
   } catch (error) {

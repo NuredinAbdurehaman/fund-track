@@ -11,6 +11,7 @@ export interface LedgerContextValue {
   myAccountTotal: number;
   selfBalance: number;
   hydrated: boolean;
+  loadError?: boolean;
   addTransaction: (input: TransactionInput) => void | Promise<void>;
   updateTransaction: (id: string, input: TransactionInput) => void | Promise<void>;
   deleteTransaction: (id: string) => void | Promise<void>;

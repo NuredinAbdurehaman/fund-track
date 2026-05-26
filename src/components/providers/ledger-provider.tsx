@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { LedgerContext } from "@/hooks/use-ledger";
 import {
   computeBalance,
@@ -17,6 +18,7 @@ import {
   deleteTransactionApi,
   fetchTransactions,
   isApiEnabled,
+  redirectToLogin,
   updateTransactionApi,
 } from "@/lib/api-transactions";
 import { loadTransactions, saveTransactions } from "@/lib/storage";
@@ -27,17 +29,27 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [usingApi, setUsingApi] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     async function init() {
       if (isApiEnabled()) {
         const fromApi = await fetchTransactions();
+        if (fromApi === "unauthorized") {
+          redirectToLogin();
+          return;
+        }
         if (fromApi) {
           setTransactions(fromApi);
           setUsingApi(true);
           setHydrated(true);
+          setLoadError(false);
           return;
         }
+        setLoadError(true);
+        setHydrated(true);
+        toast.error("Could not load transactions. Please try again.");
+        return;
       }
 
       setTransactions(loadTransactions());
@@ -57,10 +69,16 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     async (input: TransactionInput) => {
       if (usingApi) {
         const created = await createTransactionApi(input);
+        if (created === "unauthorized") {
+          redirectToLogin();
+          return;
+        }
         if (created) {
           setTransactions((prev) => [...prev, created]);
           return;
         }
+        toast.error("Failed to add transaction");
+        return;
       }
 
       const tx = createTransaction(input);
@@ -73,12 +91,18 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     async (id: string, input: TransactionInput) => {
       if (usingApi) {
         const updated = await updateTransactionApi(id, input);
+        if (updated === "unauthorized") {
+          redirectToLogin();
+          return;
+        }
         if (updated) {
           setTransactions((prev) =>
             prev.map((t) => (t.id === id ? updated : t))
           );
           return;
         }
+        toast.error("Failed to update transaction");
+        return;
       }
 
       setTransactions((prev) =>
@@ -103,10 +127,16 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       if (usingApi) {
         const ok = await deleteTransactionApi(id);
+        if (ok === "unauthorized") {
+          redirectToLogin();
+          return;
+        }
         if (ok) {
           setTransactions((prev) => prev.filter((t) => t.id !== id));
           return;
         }
+        toast.error("Failed to delete transaction");
+        return;
       }
 
       setTransactions((prev) => prev.filter((t) => t.id !== id));
@@ -148,6 +178,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       myAccountTotal,
       selfBalance,
       hydrated,
+      loadError,
       addTransaction,
       updateTransaction,
       deleteTransaction,
@@ -160,6 +191,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       myAccountTotal,
       selfBalance,
       hydrated,
+      loadError,
       addTransaction,
       updateTransaction,
       deleteTransaction,

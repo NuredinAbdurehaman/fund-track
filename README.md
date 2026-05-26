@@ -4,41 +4,53 @@ Personal finance ledger — balances are **always derived from transactions**, n
 
 ## Stack
 
-- Next.js (App Router) + TypeScript
-- Tailwind CSS + shadcn/ui
-- Phase 1–2: React state + `localStorage`
-- Phase 3: Prisma + PostgreSQL API (optional via env)
+- Next.js (App Router) + TypeScript + Tailwind + shadcn/ui
+- Supabase (PostgreSQL + Auth)
+- Prisma ORM
+- Vercel deployment
 
-## Getting started
+## Getting started (local)
 
 ```bash
 npm install
+cp .env.example .env.local
+# Fill Supabase + DB URLs; set NEXT_PUBLIC_USE_API=true for API mode
+npx prisma migrate dev
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+**Without Supabase:** omit auth env vars and set `NEXT_PUBLIC_USE_API=false` to use `localStorage` only.
+
 ## Architecture
 
-- **Source of truth:** `Transaction[]`
-- **Categories:** derived from transaction history
-- **Balances:** `sum(adds) - sum(withdraws)` per category (computed on read)
+- **Source of truth:** `Transaction[]` per authenticated user
+- **Categories:** derived from transactions
+- **My Account:** virtual total = sum(adds) − sum(withdraws) across all categories
+- **Balances:** computed on read, never stored
 
-## Git workflow
+## Deploy
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for Supabase + Vercel setup.
+
+See **[docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)** for branch and PR workflow.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run db:migrate` | Create/apply migrations (local) |
+| `npm run db:migrate:deploy` | Apply migrations (CI/production) |
+
+## Git branches
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production stable |
-| `develop` | Active integration |
-| `feature/*` | Feature work |
+| `main` | Production (Vercel) |
+| `develop` | Integration / preview |
+| `feature/*` | Features |
 
-Conventional commits: `chore:`, `feat:`, `fix:`, `refactor:`, `docs:`
-
-## PostgreSQL (Phase 3)
-
-1. Copy `.env.example` to `.env` and set `DATABASE_URL`
-2. Run `npm run db:push` (or `npm run db:migrate`)
-3. Set `NEXT_PUBLIC_USE_API=true`
-4. Restart the dev server
-
-Without a database, the app uses `localStorage` automatically.
+Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`

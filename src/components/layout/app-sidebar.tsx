@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpen, LayoutDashboard, Wallet } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BookOpen, LayoutDashboard, LogOut, Wallet } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -15,8 +17,11 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { useLedger } from "@/hooks/use-ledger";
 import { formatAmount } from "@/lib/ledger";
+import { createClient } from "@/lib/supabase/client";
+import { isAuthConfigured } from "@/lib/api-transactions";
 
 const navItems = [
   { href: "/", label: "Ledger", icon: BookOpen },
@@ -25,11 +30,29 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { balancesByCategory, myAccountTotal, hydrated } = useLedger();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthConfigured()) return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserEmail(user?.email ?? null);
+    });
+  }, []);
 
   const categoryEntries = Object.entries(balancesByCategory).sort(([a], [b]) =>
     a.localeCompare(b)
   );
+
+  async function handleSignOut() {
+    if (!isAuthConfigured()) return;
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <Sidebar>
@@ -46,10 +69,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map(({ href, label, icon: Icon }) => (
                 <SidebarMenuItem key={href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === href}
-                  >
+                  <SidebarMenuButton asChild isActive={pathname === href}>
                     <Link href={href}>
                       <Icon />
                       <span>{label}</span>
@@ -110,6 +130,24 @@ export function AppSidebar() {
           </>
         )}
       </SidebarContent>
+      {isAuthConfigured() && (
+        <SidebarFooter className="border-t border-sidebar-border p-2">
+          {userEmail && (
+            <p className="mb-2 truncate px-2 text-xs text-muted-foreground">
+              {userEmail}
+            </p>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={handleSignOut}
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </Button>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
