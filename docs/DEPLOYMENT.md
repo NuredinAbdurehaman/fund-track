@@ -141,7 +141,8 @@ To inspect local data before importing: DevTools → **Application** → **Local
 | `401` on API | Session cookie missing — ensure `credentials: "include"` on fetches; check middleware and Supabase redirect URLs |
 | Auth redirect loop | Site URL / Redirect URLs must match Vercel domain exactly |
 | `P1001` connection error | Wrong `DATABASE_URL`; use pooler + `pgbouncer=true` |
-| Migration fails on Vercel | Set `DIRECT_URL`; migrations use direct connection |
+| Migration fails on Vercel | Set `DIRECT_URL` to Supabase **direct** host (`db.xxx.supabase.co:5432`), not the pooler |
+| `P3005` schema is not empty | DB was created with `db push` before migrations. Run once locally: `npm run db:baseline` (with production `DATABASE_URL`/`DIRECT_URL`), or redeploy — build script auto-baselines |
 | Prisma / RLS conflict | Prisma uses service DB URL; app filters by `userId`. RLS is extra protection |
 | Empty ledger in prod | Set `NEXT_PUBLIC_USE_API=true`; check Vercel function logs for API errors |
 
