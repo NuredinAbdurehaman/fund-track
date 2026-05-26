@@ -43,7 +43,10 @@ Project **Settings** → **Database**:
 | Variable | Key |
 |----------|-----|
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` `public` key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` `public` key (JWT, starts with `eyJ`) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Alternative name if using Supabase publishable keys |
+
+Set **one** of the key variables; the app accepts either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
 ---
 

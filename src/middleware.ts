@@ -1,12 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { updateSession } from "@/lib/supabase/middleware";
-
-function isAuthConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"];
 
@@ -21,7 +15,7 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  if (!isAuthConfigured()) {
+  if (!isSupabaseConfigured()) {
     return NextResponse.next();
   }
 

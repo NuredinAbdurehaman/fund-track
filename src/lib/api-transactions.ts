@@ -1,3 +1,4 @@
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Transaction, TransactionInput } from "@/types/transaction";
 
 const BASE = "/api/transactions";
@@ -11,10 +12,7 @@ export function isApiEnabled(): boolean {
 }
 
 export function isAuthConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured();
 }
 
 type ApiResult<T> =
@@ -40,11 +38,22 @@ async function apiFetch<T>(
   }
 }
 
+const AUTH_PATHS = ["/login", "/auth"];
+
+export function isAuthPagePath(pathname: string): boolean {
+  return AUTH_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 export function redirectToLogin(): void {
-  if (typeof window !== "undefined") {
-    const redirectTo = encodeURIComponent(window.location.pathname);
-    window.location.href = `/login?redirectTo=${redirectTo}`;
-  }
+  if (typeof window === "undefined") return;
+
+  const pathname = window.location.pathname;
+  if (isAuthPagePath(pathname)) return;
+
+  const redirectTo = encodeURIComponent(pathname);
+  window.location.href = `/login?redirectTo=${redirectTo}`;
 }
 
 export async function fetchTransactions(): Promise<

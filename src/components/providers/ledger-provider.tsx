@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { LedgerContext } from "@/hooks/use-ledger";
 import {
@@ -18,6 +19,7 @@ import {
   deleteTransactionApi,
   fetchTransactions,
   isApiEnabled,
+  isAuthPagePath,
   redirectToLogin,
   updateTransactionApi,
 } from "@/lib/api-transactions";
@@ -26,12 +28,22 @@ import type { Transaction, TransactionInput } from "@/types/transaction";
 import type { TransactionFilters } from "@/types/transaction";
 
 export function LedgerProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [usingApi, setUsingApi] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
+  const isAuthPage = isAuthPagePath(pathname);
+
   const loadFromSource = useCallback(async () => {
+    if (isApiEnabled() && isAuthPage) {
+      setTransactions([]);
+      setUsingApi(false);
+      setLoadError(false);
+      return;
+    }
+
     if (isApiEnabled()) {
       const fromApi = await fetchTransactions();
       if (fromApi === "unauthorized") {
@@ -50,10 +62,11 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     }
 
     setTransactions(loadTransactions());
-  }, []);
+  }, [isAuthPage]);
 
   useEffect(() => {
     async function init() {
+      setHydrated(false);
       await loadFromSource();
       setHydrated(true);
     }
