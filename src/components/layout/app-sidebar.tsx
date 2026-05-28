@@ -21,7 +21,12 @@ import { Button } from "@/components/ui/button";
 import { useLedger } from "@/hooks/use-ledger";
 import { formatAmount } from "@/lib/ledger";
 import { createClient } from "@/lib/supabase/client";
-import { isAuthConfigured } from "@/lib/api-transactions";
+import {
+  fetchIncomingSharesApi,
+  isAuthConfigured,
+  redirectToLogin,
+  type IncomingShare,
+} from "@/lib/api-transactions";
 
 const navItems = [
   { href: "/", label: "Ledger", icon: BookOpen },
@@ -33,6 +38,7 @@ export function AppSidebar() {
   const router = useRouter();
   const { balancesByCategory, myAccountTotal, hydrated } = useLedger();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [incomingShares, setIncomingShares] = useState<IncomingShare[]>([]);
 
   useEffect(() => {
     if (!isAuthConfigured()) return;
@@ -40,6 +46,20 @@ export function AppSidebar() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email ?? null);
     });
+  }, []);
+
+  useEffect(() => {
+    async function loadShares() {
+      if (!isAuthConfigured()) return;
+      const shares = await fetchIncomingSharesApi();
+      if (shares === "unauthorized") {
+        redirectToLogin();
+        return;
+      }
+      setIncomingShares(shares ?? []);
+    }
+
+    void loadShares();
   }, []);
 
   const categoryEntries = Object.entries(balancesByCategory).sort(([a], [b]) =>
@@ -80,6 +100,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {incomingShares.length > 0 && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup>
+              <SidebarGroupLabel>Shared with me</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {incomingShares.map((share) => (
+                    <SidebarMenuItem key={share.id}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === `/shared/${share.id}`}
+                      >
+                        <Link href={`/shared/${share.id}`}>
+                          <span>{share.category} (shared)</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
 
         {hydrated && (
           <>
