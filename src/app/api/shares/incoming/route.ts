@@ -19,7 +19,36 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(shares);
+    const withTotals = await Promise.all(
+      shares.map(async (share) => {
+        const [adds, withdraws] = await Promise.all([
+          prisma.transaction.aggregate({
+            where: {
+              userId: share.ownerId,
+              category: share.category,
+              type: "add",
+            },
+            _sum: { amount: true },
+          }),
+          prisma.transaction.aggregate({
+            where: {
+              userId: share.ownerId,
+              category: share.category,
+              type: "withdraw",
+            },
+            _sum: { amount: true },
+          }),
+        ]);
+
+        const addSum = Number(adds._sum.amount ?? 0);
+        const withdrawSum = Number(withdraws._sum.amount ?? 0);
+        const total = addSum - withdrawSum;
+
+        return { ...share, total };
+      })
+    );
+
+    return NextResponse.json(withTotals);
   } catch (error) {
     console.error("GET /api/shares/incoming", error);
     return NextResponse.json({ error: "Failed to load shares" }, { status: 503 });

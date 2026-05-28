@@ -22,10 +22,16 @@ import {
   fetchSharedTransactionsApi,
   redirectToLogin,
 } from "@/lib/api-transactions";
-import { formatAmount, sortTransactions } from "@/lib/ledger";
+import { computeBalance, formatAmount, sortTransactions } from "@/lib/ledger";
 import type { Transaction } from "@/types/transaction";
 
-export function SharedTransactionList({ shareId }: { shareId: string }) {
+export function SharedTransactionList({
+  shareId,
+  onTotalChange,
+}: {
+  shareId: string;
+  onTotalChange?: (total: number, category: string | null) => void;
+}) {
   const [hydrated, setHydrated] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
@@ -49,6 +55,20 @@ export function SharedTransactionList({ shareId }: { shareId: string }) {
 
     void load();
   }, [shareId]);
+
+  const sharedCategory = useMemo(() => {
+    if (transactions.length === 0) return null;
+    return transactions[0]?.category ?? null;
+  }, [transactions]);
+
+  const total = useMemo(
+    () => computeBalance(transactions),
+    [transactions]
+  );
+
+  useEffect(() => {
+    onTotalChange?.(total, sharedCategory);
+  }, [onTotalChange, total, sharedCategory]);
 
   const displayed = useMemo(
     () => sortTransactions(transactions),

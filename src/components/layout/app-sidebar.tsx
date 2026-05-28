@@ -115,7 +115,16 @@ export function AppSidebar() {
                         isActive={pathname === `/shared/${share.id}`}
                       >
                         <Link href={`/shared/${share.id}`}>
-                          <span>{share.category} (shared)</span>
+                          <span className="flex w-full items-center justify-between gap-2">
+                            <span className="truncate">{share.category} (shared)</span>
+                            <span
+                              className={`shrink-0 text-xs tabular-nums ${
+                                share.total >= 0 ? "text-foreground" : "text-destructive"
+                              }`}
+                            >
+                              {formatAmount(share.total)}
+                            </span>
+                          </span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

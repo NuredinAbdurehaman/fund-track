@@ -144,6 +144,7 @@ export type IncomingShare = {
   category: string;
   role: string;
   createdAt: string;
+  total: number;
 };
 
 export async function createCategoryShareLinkApi(
