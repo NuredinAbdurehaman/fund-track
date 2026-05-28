@@ -137,3 +137,80 @@ export async function deleteTransactionApi(
   }
   return true;
 }
+
+export type IncomingShare = {
+  id: string;
+  ownerId: string;
+  category: string;
+  role: string;
+  createdAt: string;
+  total: number;
+};
+
+export async function createCategoryShareLinkApi(
+  category: string
+): Promise<{ url: string } | "unauthorized" | null> {
+  const result = await apiFetch<{ url: string }>(`/api/shares/category-links`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category, role: "viewer" }),
+  });
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return null;
+  }
+  return result.data;
+}
+
+export async function acceptShareTokenApi(
+  token: string
+): Promise<{ shareId: string } | "unauthorized" | null> {
+  const result = await apiFetch<{ shareId: string }>(`/api/shares/accept`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return null;
+  }
+  return result.data;
+}
+
+export async function fetchIncomingSharesApi(): Promise<
+  IncomingShare[] | "unauthorized" | null
+> {
+  const result = await apiFetch<IncomingShare[]>(`/api/shares/incoming`);
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return null;
+  }
+  return result.data;
+}
+
+export async function fetchSharedTransactionsApi(
+  shareId: string
+): Promise<Transaction[] | "unauthorized" | null> {
+  const result = await apiFetch<Transaction[]>(
+    `/api/shares/${encodeURIComponent(shareId)}/transactions`
+  );
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return null;
+  }
+  return result.data;
+}
+
+export async function untrackShareApi(
+  shareId: string
+): Promise<boolean | "unauthorized"> {
+  const result = await apiFetch<{ ok: boolean }>(
+    `/api/shares/incoming/${encodeURIComponent(shareId)}`,
+    { method: "DELETE" }
+  );
+  if (!result.ok) {
+    if (result.unauthorized) return "unauthorized";
+    return false;
+  }
+  return true;
+}

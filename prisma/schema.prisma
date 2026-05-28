@@ -21,3 +21,31 @@ model Transaction {
   @@index([userId])
   @@map("transactions")
 }
+
+model CategoryShareLink {
+  id        String    @id @default(uuid())
+  ownerId   String    @map("owner_id")
+  category  String
+  role      String
+  tokenHash String    @map("token_hash")
+  createdAt DateTime  @default(now()) @map("created_at")
+  expiresAt DateTime? @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  @@index([ownerId])
+  @@index([tokenHash])
+  @@map("category_share_links")
+}
+
+model CategoryShare {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  category    String
+  recipientId String   @map("recipient_id")
+  role        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([ownerId, category, recipientId])
+  @@index([recipientId])
+  @@map("category_shares")
+}
